@@ -14,6 +14,7 @@ import com.opencsv.CSVReader;
 
 import java.io.InputStreamReader;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -30,6 +31,8 @@ public class EmployeeService {
     private static final String EMPLOYEE_CACHE_KEY = "EMPLOYEE_";
     private static final String EMPLOYEE_KEYS_SET = "EMPLOYEE_KEYS_SET";
     private static final int MAX_CACHE_SIZE = 5;
+    static int CACHE_HITS = 0;
+    static int CACHE_MISS = 0;
 
     @CachePut(value = "employee", key="#employee.id")
     public Employee createEmployee(Employee employee) {
@@ -38,15 +41,20 @@ public class EmployeeService {
         return savedEmployee;
     }
 
+    public Map<String, Integer> getCachePerformanceStats() {
+        return Map.of("Cache Hits", CACHE_HITS, "Cache Misses", CACHE_MISS);
+    }
+
 
     @Cacheable(value = "employee", key="#id", unless = "#result == null")
     public Optional<Employee> getEmployeeById(long id) {
         Employee cachedEmployee = (Employee)redisTemplate.opsForValue().get(EMPLOYEE_CACHE_KEY + id);
         if(cachedEmployee != null)
         {
+            CACHE_HITS++;
             return Optional.of(cachedEmployee);
         }
-
+        CACHE_MISS++;
         Optional<Employee> empl = employeeRepository.findById(id);
         empl.ifPresent(this::cachedEmployee);        
         return empl;

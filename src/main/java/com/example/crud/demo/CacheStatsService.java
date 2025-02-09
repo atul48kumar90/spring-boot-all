@@ -31,9 +31,9 @@ public class CacheStatsService {
         Set<String> cacheKeys = redisTemplate.keys("EMPLOYEE_*");
 
         return Map.of(
-            "Total Cached Employees", totalKeys,
-            "Current Cache Keys", cacheKeys,
-            "Memory Usage", memoryInfo.get("used_memory_human")
-        );
+        "Total Cached Employees", redisTemplate.keys("EMPLOYEE_*").size(),
+        "Cache Hits", EmployeeService.CACHE_HITS,
+        "Cache Misses", EmployeeService.CACHE_MISS
+    );
     }
 }
